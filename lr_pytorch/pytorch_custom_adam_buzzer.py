@@ -54,11 +54,28 @@ def create_feature_matrix_sklearn(train_data, test_data=None):
     TODOs: create a data iterator for train and test data
     '''
 
+    def data_iterator(data, batch_size=1000):
+        """Iterator that yields batches of examples"""
+        for i in range(0, len(data), batch_size):
+            batch = data[i:i + batch_size]
+            batch_dicts = [ex.raw_features for ex in batch]
+            batch_labels = [ex.y for ex in batch]
+            yield batch_dicts, batch_labels
+
+    def train_iterator():
+        return data_iterator(train_data)
+    
+    def test_iterator():
+        if test_data: 
+            return data_iterator(test_data)
+        else: 
+            return None
+
     # -----------------------------------------------------------
     # Implement: Fit a vectorizer on training data into a  sparse matrix
     # -----------------------------------------------------------
-    vectorizer   = None
-    X_train = None
+    vectorizer   = DictVectorizer(sparse=False)
+    X_train = vectorizer.fit_transform(train_data)
 
     # Implement: Convert to Dense for PyTorch
 
@@ -66,7 +83,9 @@ def create_feature_matrix_sklearn(train_data, test_data=None):
     # Add the same data processing for test data if it exists
     # -----------------------------------------------------------
     if test_data:
-        X_test, y_test = None, None
+        test_dicts = [ex.raw_features for ex in test_data]
+        y_test = np.array([ex.y for ex in test_data], dtype=np.float32)
+        X_test = vectorizer.transform(test_dicts)
     else:
         X_test, y_test = None, None
 
@@ -83,7 +102,7 @@ class SimpleLogreg(nn.Module):
         '''
         TODOs: Implement a single linear layer with the number of features passed in the parameter.
         '''
-        self.linear = None
+        self.linear = torch.nn.Linear(num_features,1)
         # Initialize weights to zero for consistency with original implementation
         nn.init.zeros_(self.linear.weight)
         nn.init.zeros_(self.linear.bias)
@@ -92,8 +111,8 @@ class SimpleLogreg(nn.Module):
         '''
         TODOs: Implement forward pass with softmax/sigmoid activation function
         '''
-
-        return None
+        predicted_y = torch.sigmoid(self.linear(x))
+        return predicted_y
 
 
 class CustomAdamOptimizer:
@@ -129,7 +148,10 @@ class CustomAdamOptimizer:
         '''
         TODOs: Set gradients of all parameters to zero
         '''
-        pass
+        for param in self.params:
+            if param.grad is not None:
+                param.grad.zero_()
+    
     
     def step(self):
         '''
@@ -145,7 +167,7 @@ class CustomAdamOptimizer:
             ''' 
             TODOs: Add weight decay (L2 regularization)
             '''
-            grad = None
+            grad = grad + (self.weight_decay * param.data)
 
             # Get state variables
             exp_avg = state['exp_avg']      # m_t
@@ -170,6 +192,30 @@ class CustomAdamOptimizer:
 
             6. Update parameters: θ_t = θ_{t-1} - α_t * m_t / (√v_t + ε)
             '''
+            #Step 1: 
+            exp_avg = (self.beta1 * exp_avg) + ((1-self.beta1)*grad)
+            state['exp_avg'] = exp_avg
+
+            #Step 2: 
+            exp_avg_sq = (self.beta2*exp_avg_sq) + ((1-self.beta2)*(grad**2))
+            state['exp_avg_sq'] = exp_avg_sq
+
+            #Step 3: 
+            bias_correction_1 = 1 - (self.beta1**step)
+            m_hat_t = state['exp_avg'] / bias_correction_1
+
+            #Step 4: 
+            bias_correction_2 = 1 - (self.beta2**step)
+            v_hat_t = state['exp_avg_sq'] / bias_correction_2
+
+            #Step 5:
+            a_t = self.lr 
+
+
+            #Step 6:
+            denom = torch.sqrt(v_hat_t) + self.eps
+            param.data -= a_t * (m_hat_t / denom)
+
 
 
 class Example:
