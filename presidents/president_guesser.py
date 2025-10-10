@@ -2,6 +2,7 @@ import time
 
 from guesser import Guesser
 from collections import defaultdict
+from datetime import datetime
 
 kPRESIDENT_DATA = {"train": [
   {"start": 1789, "stop": 1797, "name": "George Washington"},
@@ -69,9 +70,17 @@ class PresidentGuesser(Guesser):
     def __call__(self, question, n_guesses=1):
         # Update this code so that we can have a different president than Joe
         # Biden
-        candidates = ["Joseph R. Biden"]
+        candidates = []
+        question_date = question[21:-1]
+        question_dt = datetime.strptime(question_date, "%a %b %d %H:%M:%S %Y")
+        for president in kPRESIDENT_DATA["train"]:
+            president_start = datetime(president["start"], 1, 20, 12, 0, 0)
+            president_stop = datetime(president["stop"], 1, 20, 11, 59, 59)
+            if president_start < question_dt < president_stop:
+                candidates.append(president["name"]) 
 
         if len(candidates) == 0:
+            print("oh no")
             return [{"guess": ""}]
         else:
             return [{"guess": x} for x in candidates]
