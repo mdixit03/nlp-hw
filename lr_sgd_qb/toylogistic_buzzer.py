@@ -158,13 +158,17 @@ class ToyLogisticBuzzer(Buzzer):
            The new parameter vector
         """
         mu = self._mu
-        step = self._step
+        step = self._step(iteration) if callable(self._step) else self._step
         beta = self._beta
         
+        x = train_example.x
+        y = train_example.y 
 
+        beta_x = np.dot(beta, x) #get the dot product of betas and x
+        pi = sigmoid(beta_x) #pi is the prediction 
 
-
-
+        update = step * (y-pi) * x
+        beta += update 
 
 
         return beta
@@ -181,22 +185,26 @@ class ToyLogisticBuzzer(Buzzer):
         return beta
 
     
-    def inspect(self, vocab, limit=5):
+    def inspect(self, vocab: Iterable[str], limit:int=5) -> Tuple[Iterable[int], Iterable[int]]:
         """
-        A function to find the top features.
+        A function to find the top features.  Returns the indices of the most
+        important and least important features.
+
+        Args:
+            vocab: list of the name of all of the features.  the index should correspond to the position in the feature vector.
+            limit: many features to display
+        Returns:
+            A tuple of lists of the top and bottom features
         """
-        # Get indices sorted by weight magnitude
-        feature_weights = [(i, self._beta[i]) for i in range(len(self._beta))]
-        feature_weights.sort(key=lambda x: x[1], reverse=True)
-        
-        top = [idx for idx, weight in feature_weights[:limit]]
-        bottom = [idx for idx, weight in feature_weights[-limit:]]
-        
+
+        top = [0]
+        bottom = []
+
         for idx in list(top) + list(bottom):
             logging.info("Feat %35s %3i: %+0.5f" %
                          (vocab[idx], idx, self._beta[idx]))
-    
-    return top, bottom
+
+        return top, bottom
 
     
     def train(self, train = None, test = None, vocab=None, passes=1):
@@ -224,8 +232,8 @@ class ToyLogisticBuzzer(Buzzer):
             features = [feature.name for feature in self._feature_generators]
             assert len(self._features) == len(self._correct)
             for x, y in zip(self._features, self._correct):
-                x["label"] = y  # Should be y, not self._correct
-                train.append(Example(x, features))
+                x["label"] = self._correct
+            train.append(Example(x, features))
         else:
             assert vocab is not None, \
                 "Vocab must be supplied if we don't generate"
@@ -237,9 +245,9 @@ class ToyLogisticBuzzer(Buzzer):
                 update_number += 1                
 
                 if update_number % 100 == 1:
-                    train_progress = self.progress(train)
+                    train_progress = lr.progress(train)
                     if test:
-                        test_progress = self.progress(test)
+                        test_progress = lr.progress(test)
                     else:
                         test_progress = defaultdict(int)
                         test_progress['logprob'] = float("-inf")
