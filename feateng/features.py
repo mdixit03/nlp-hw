@@ -48,8 +48,17 @@ class LengthFeature(Feature):
 
     def __call__(self, question, run, guess, guess_history, other_guesses=None):
         # How many characters long is the question?
-
-        guess_length = 0
+        # for thing in question: 
+        #     print(thing)
+        # print(question['subcategory'])
+        # print(f"Question type: {type(question)}")
+        # print(f"Run type: {type(run)}")
+        # print(f"Guess type: {type(guess)}")
+        # print("Question: " + question)
+        # print("Run: " + run)
+        # print("Guess: " + guess)
+        question_length = len(question['tokenizations'])
+        guess_length = len(guess) 
 
         # How many words long is the question?
 
@@ -57,15 +66,64 @@ class LengthFeature(Feature):
         # How many characters long is the guess?
         if guess is None or guess=="":  
             yield ("guess", -1)         
-        else:                           
-            yield ("guess", guess_length)  
+        else:   
+            yield ("word", len(run.split())) #length of run in words
+            yield ("char", len(run))  #length of run in chars
+            yield ("question", question_length) #length of question in tokens
+            #yield ("guess", guess_length) #length of guess in chars
 
             
-
-
-
+class FrequencyFeature(Feature):
+    def __init__(self, name):
+        from eval import normalize_answer
+        self.name = name
+        self.counts = Counter()
+        self.normalize = normalize_answer
         
+    def add_training(self, question_source):
+        import json
+        with gzip.open(question_source) as infile:
+            questions = json.load(infile)
+        for ii in questions:
+            self.counts[self.normalize(ii["page"])] += 1
+            
+    def __call__(self, question, run, guess, guess_history, guesses):
+        # We only use question, run, and guess (same as before)
+        # guess_history and guesses are ignored since we don't need them
         
+        frequency_value = log(1 + self.counts[self.normalize(guess)])
+        yield ("guess_frequency", frequency_value) # <--- Changed this yield instead of return
+
+class DisambiguatorFeature(Feature):
+    """
+    Is there a parentheses disambiguator?
+    """
+
+    def __call__(self, question, run, guess, guess_history, other_guesses=None):
+        yield ("disambiguator", ("(" in guess and ")" in guess))
+        
+class CategoryFeature(Feature):
+    """
+    Category of the question
+    """
+    def __call__(self, question, run, guess, guess_history, other_guesses=None):
+        yield ("Category", question['category'])
+
+class SubcategoryFeature(Feature):
+    """
+    Category of the question
+    """
+    def __call__(self, question, run, guess, guess_history, other_guesses=None):
+        yield ("Subcategory", question['subcategory'])
+
+class YearFeature(Feature):
+    """
+    Category of the question
+    """
+    def __call__(self, question, run, guess, guess_history, other_guesses=None):
+        yield ("year", question['year'])
+
+
 class GuessBlankFeature(Feature):
     """
     Is guess blank?
