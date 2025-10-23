@@ -111,6 +111,7 @@ class SimpleLogreg(nn.Module):
         '''
         TODOs: Implement forward pass with softmax/sigmoid activation function
         '''
+        
         predicted_y = torch.sigmoid(self.linear(x))
         return predicted_y
 
