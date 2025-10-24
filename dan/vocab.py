@@ -43,7 +43,7 @@ class Vocab:
         assert not self.final, "Vocabulary already finalized, cannot add more words"
         
         if idx == -1:
-            idx = max(self._id_to_word.keys()) + 1
+            idx = max(self.lookup.keys()) + 1 if self.lookup else 0
 
         self.lookup[idx] = word
         self.reverse_lookup[word] = idx

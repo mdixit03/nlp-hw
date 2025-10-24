@@ -252,7 +252,6 @@ class DanModel(nn.Module):
 
 
                       
-
         # Create the actual prediction framework for the DAN classifier.
 
         # You'll need combine the two linear layers together, probably
@@ -265,8 +264,7 @@ class DanModel(nn.Module):
         # TODOs: Implement the network structure        
         # self.network = None
         #### Your code here
-        self.network = None
-
+        self.network = nn.Sequential(self.linear1, nn.ReLU(), nn.Dropout(p = self.nn_dropout), self.linear2)
         # To make this work on CUDA, you need to move it to the appropriate
         # device
         if self.network:
@@ -294,14 +292,20 @@ class DanModel(nn.Module):
         text_embeddings: embeddings of the words
         text_len: the corresponding number of words [1 x Nd]
         """
-        average = torch.zeros(text_embeddings.size()[0], text_embeddings.size()[-1])
+        average = torch.zeros(text_embeddings.size()[0], text_embeddings.size()[-1], 
+                         device=text_embeddings.device)
         # TODOs: Implement the averaging function for the embeddings. Sum along
         # the sequence dimension and divide by length
         
         for i in range(text_embeddings.size()[0]):
             # Sum embeddings along the sequence dimension and divide by length
-            pass
-
+            sequence_len = text_len[i]
+            if sequence_len > 0: 
+                sum_embeddings = torch.sum(text_embeddings[i, :sequence_len, :], dim=0) 
+                average[i] = sum_embeddings / sequence_len
+            else: 
+                average[i] = 0
+            
         return average
 
     def forward(self, input_text: Iterable[int], text_len: Tensor):
@@ -315,10 +319,10 @@ class DanModel(nn.Module):
 
         # TODOs: Implement the forward function. 
         
-    
-        embeddings = None
-        averaged = None
-        representation = None
+
+        embeddings = self.embeddings(input_text)
+        averaged = self.average(embeddings, text_len)
+        representation = self.network(averaged)
 
         return representation
 
@@ -564,8 +568,13 @@ class QuestionData(Dataset):
         """
 
         assert vocab is not None, "Vocab not initialized"
+
+        toks = tokenizer(ex)
+        token_ids = []
+        for token in toks: 
+            token_ids.append(vocab[token])
         
-        vec_text = None
+        vec_text = torch.tensor([token_ids], dtype=torch.long)
 
         return vec_text
 
