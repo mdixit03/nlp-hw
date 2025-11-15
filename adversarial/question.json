@@ -1,6 +1,24 @@
 [
-  {
-    "text": "The reciprocal of what quantity was estimated to be .9 higher than the three-digit integer value popularly associated with it in 1916 experiments conducted by a Brandenburg-based researcher? That researcher also hosted Ho Zah-wei ( 何泽慧 ) in his home; she would later go on to lead the neutron flux team of the Chinese nuclear program.",
-    "answer": ["Sommerfeld_constant", "Fine-structure_constant"]
-  }
+    {
+	"type": "pyramidal",
+	"text": "This country experiences tourism in relation to a prominent geographical feature. It has recently made headlines for the manner in which the newest leader of its federal government was elected, as citizens used a platform originally designed for video game players to cast their votes. What is the shape of this country’s red, white, and blue flag?",
+	"answer": "a double-pennon"
+    },
+    {
+	"type": "mc",
+	"text": "This country experiences tourism in relation to a prominent geographical feature. It has recently made headlines for the manner in which the newest leader of its federal government was elected, as citizens used a platform originally designed for video game players to cast their votes. What are the colors of this country’s flag?",
+	"choices": ["Red and white", "Red, white, and blue","Red, green, black, and white","Blue, black, and white"],
+	"answer": "Red, white, and blue"
+    },
+    {
+	"type": "pyramidal",
+	"text": "Originating in a 2024 Skrilla Rap song, this brain rot phrase became the subject of a variety of reels and tik toks. Popularized by gen alpha on social media and in classrooms, this slang is usually paired with the gesticulation of both hands open when uttered. This phrase of consecutive numerical digits is called what?",
+	"answer": "6-7"
+    },
+    {
+	"type": "mc",
+	"text": "What is the name used by UMD students of the steep hill on Union Lane that they embark on next to the Stamp Student Union?",
+	"choices": ["terrapin hill", "murder hill","everest","stamp hill"],
+	"answer": "stamp hill"
+    }
 ]
